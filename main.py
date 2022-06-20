@@ -59,11 +59,11 @@ class UserInDB(Userdata):
 # db_password=""
 # db_host="127.0.0.1"
 # db_port="3306"
-db_name="d9i3ntsnq21dkm"
-db_user="yqmzidjqsjuvle"
-db_password="915d186e5890a6b80f48d4c0dd72c6af147d5da8bcdacc52dc1408d5e8305089"
-db_host="ec2-44-197-128-108.compute-1.amazonaws.com"
-db_port="5432"
+db_name="sql4500961"
+db_user="sql4500961"
+db_password="1GqlVcPjtS"
+db_host="sql4.freemysqlhosting.net"
+db_port="3306"
 
 
 app = FastAPI()
