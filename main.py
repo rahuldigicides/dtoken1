@@ -184,7 +184,7 @@ async def register_user(udata: Userdata):
                 return {"message":"User Created", "status":status.HTTP_201_CREATED}
                 ##################################################################
             else:
-                return {"message":"Dulicate user", "status":status.HTTP_409}
+                return {"message":"Dulicate user","status":409 }
 
     finally:
 
