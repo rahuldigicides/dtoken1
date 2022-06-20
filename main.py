@@ -27,8 +27,8 @@ class Userdata(BaseModel):
     reporting: str
     blocked: int
     deleted: int
-    name=str 
-    phone=str
+    name:str 
+    phone:str
 
 class Userlogin(BaseModel):
     username: str
