@@ -27,6 +27,8 @@ class Userdata(BaseModel):
     reporting: str
     blocked: int
     deleted: int
+    name=str 
+    phone=str
 
 class Userlogin(BaseModel):
     username: str
@@ -167,7 +169,9 @@ async def register_user(udata: Userdata):
     company = udata.company
     reporting = udata.reporting
     blocked = udata.blocked
-    deleted = udata.deleted
+    deleted = udata.deleted 
+    name=udata.name 
+    phone=udata.phone
 
     con = pymysql.connect(host=db_host, user=db_user, password=db_password, database=db_name)
 
@@ -180,8 +184,8 @@ async def register_user(udata: Userdata):
             con.commit()
             if len(data) == 0:
                 ############################create user ##############################
-                cur.execute('INSERT INTO users VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)',
-                            (userid, email, password, role, reporting, ustatus,company, blocked, deleted))
+                cur.execute('INSERT INTO users VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s,%s ,%s)',
+                            (userid, email, password, role, reporting, ustatus,company, blocked, deleted,name,phone))
                 con.commit()
 
                 # print('new user inserted')
