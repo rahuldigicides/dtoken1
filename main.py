@@ -61,11 +61,16 @@ class UserInDB(Userdata):
 # db_password=""
 # db_host="127.0.0.1"
 # db_port="3306"
-db_name="sql4500961"
-db_user="sql4500961"
-db_password="1GqlVcPjtS"
-db_host="sql4.freemysqlhosting.net"
-db_port="3306"
+# db_name="sql4500961"
+# db_user="sql4500961"
+# db_password="1GqlVcPjtS"
+# db_host="sql4.freemysqlhosting.net"
+# db_port="3306"
+db_name = 'digicides'
+db_user= 'kingadmin'
+db_password = '12345678'
+db_host = 'database-1.czaglb0mlalx.ap-south-1.rds.amazonaws.com'
+db_port = str(os.getenv('DB_PORT'))
 
 
 app = FastAPI()
@@ -83,6 +88,41 @@ app.add_middleware(
 def hello():
     return {"server":"uvicorn main:app --host 0.0.0.0 --port 8000"}
 
+
+
+
+
+
+# ! Verify User from Token 
+def verify_user(username):
+    
+    con = pymysql.connect(host=db_host, user=db_user, password=db_password, database=db_name, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
+    try:
+
+        with con.cursor() as cur:
+
+            cur.execute('select * from users where email=%s and password=%s',
+                        (username['usr'],username['paw'])) 
+            
+            result =  cur.fetchall()
+            
+            con.commit()
+
+            if len(result) > 0:
+              return username
+                
+               
+            else:
+                raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username and password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+               
+
+    finally:
+
+        con.close()
 # ! Auth Handle File 
 class AuthHandler():
     security = HTTPBearer()
@@ -95,11 +135,12 @@ class AuthHandler():
     # def verify_password(self, plain_password, hashed_password):
     #     return self.pwd_context.verify(plain_password, hashed_password)
 
-    def encode_token(self, user_id):
+    def encode_token(self, user_id,paw):
         payload = {
             'exp': datetime.utcnow() + timedelta(days=0, minutes=60),
             'iat': datetime.utcnow(),
-            'sub': user_id
+            'sub': user_id ,
+            'paw':paw
         }
         return jwt.encode(
             payload,
@@ -110,16 +151,21 @@ class AuthHandler():
     def decode_token(self, token):
         try:
             payload = jwt.decode(token, self.secret, algorithms=['HS256'])
-            return payload['sub']
+            # print("username",payload['sub'])
+            # print("password",payload['paw'])
+            
+            return {"usr": payload['sub'] ,"paw": payload['paw']}
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail='Signature has expired')
         except jwt.InvalidTokenError as e:
             raise HTTPException(status_code=401, detail='Invalid token')
 
     def auth_wrapper(self, auth: HTTPAuthorizationCredentials = Security(security)):
-        return self.decode_token(auth.credentials)
+        # return self.decode_token(auth.credentials)
+        return verify_user(self.decode_token(auth.credentials))
 
 auth_handler = AuthHandler()
+
 
 
 
@@ -143,7 +189,7 @@ async def user_login(udata:Userlogin):
             con.commit()
 
             if len(result) > 0:
-                token = auth_handler.encode_token(username)
+                token = auth_handler.encode_token(username,password)
                 return {"token": token, "token_type": "bearer","status":status.HTTP_200_OK}
                
             else:
@@ -188,9 +234,9 @@ async def register_user(udata: Userdata):
                             (userid, email, password, role, reporting, ustatus,company, blocked, deleted,name,phone))
                 con.commit()
 
-                # print('new user inserted')
+                print('new user inserted')
                 # "status":status.HTTP_200_OK
-                return {"message":"User Created", "status":status.HTTP_201_CREATED}
+                # return {"message":"User Created", "status":status.HTTP_201_CREATED}
                 ##################################################################
             else:
                 return {"message":"Dulicate user","status":409 }
@@ -199,17 +245,18 @@ async def register_user(udata: Userdata):
 
         con.close()
 
-    return {"message": "user created!"}
+    return {"message": "user created!", "status":status.HTTP_201_CREATED}
 
 
 
 
 @app.get("/userlist")
-async def get_users(username=Depends(auth_handler.auth_wrapper)):
+# async def get_users(username=Depends(auth_handler.auth_wrapper)):
+async def get_users():
 
     con = pymysql.connect(host=db_host, user=db_user, password=db_password, database=db_name, charset='utf8mb4', cursorclass=pymysql.cursors.DictCursor)
     
-    print("================= ",username)
+    # print("================= ",username)
     try:
 
         with con.cursor() as cur:
@@ -219,7 +266,7 @@ async def get_users(username=Depends(auth_handler.auth_wrapper)):
             result = cur.fetchall()
             con.commit()
 
-            print('new user inserted')
+            print('user Data ', result)
 
     finally:
 
